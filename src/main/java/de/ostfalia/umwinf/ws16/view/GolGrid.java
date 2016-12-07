@@ -15,9 +15,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.stream.Stream;
 
 /**
  * displays a {@link GameOfLife} in a {@link GridPane} wrapped by a {@link BorderPane} using colored cells
@@ -69,6 +71,8 @@ public abstract class GolGrid extends BorderPane implements Observer {
             throw new IllegalArgumentException("Invalid period");
 
         handlePattern("");
+        // remove grid lines for simulation
+        deepStream(rectangles).forEach(r -> r.setStroke(Color.TRANSPARENT));
         running = true;
         Thread t = new Thread(new Task<Void>() {
             private boolean repeating = false;
@@ -82,12 +86,12 @@ public abstract class GolGrid extends BorderPane implements Observer {
                     if (gol.allDead()) {
                         running = false;
                         handlePatternInternal(String.format("extinct (after %d)", gol.countAdvances()));
-                        return null;
+                        break;
                     }
                     if (gol.isFieldStatic()) {
                         running = false;
                         handlePatternInternal(String.format("static (after %d)", gol.countAdvances()));
-                        return null;
+                        break;
                     }
                     if (gol.isRepeating() && !repeating) {
                         repeating = true;
@@ -96,6 +100,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
                     }
                     Thread.sleep(period);
                 }
+                deepStream(rectangles).forEach(r -> r.setStroke(Color.BLACK));
                 return null;
             }
 
@@ -123,7 +128,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
     /**
      * re-sizes the field
      *
-     * @throws IllegalStateException if a simulation is running
+     * @throws IllegalStateException    if a simulation is running
      * @throws IllegalArgumentException x or y is invalid (less than or equal to 0)
      */
     public void setFieldSize(int x, int y) {
@@ -228,7 +233,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
     protected Color colorOf(GolState state) {
         if (state == GolState.ALIVE)
             return Color.BLACK;
-        return Color.WHITE;
+        return Color.TRANSPARENT;
     }
 
     /**
@@ -249,5 +254,9 @@ public abstract class GolGrid extends BorderPane implements Observer {
             GolState current = gol.getCell(j, i);
             gol.setCell(current.toggle(), j, i);
         }
+    }
+
+    public static <T> Stream<T> deepStream(T[][] array) {
+        return Arrays.stream(array).flatMap(Arrays::stream);
     }
 }
