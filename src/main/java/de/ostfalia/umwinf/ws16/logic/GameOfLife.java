@@ -2,6 +2,7 @@ package de.ostfalia.umwinf.ws16.logic;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Conway's Game of Life implementation, offers analysis like pattern recognition
@@ -34,6 +35,10 @@ public class GameOfLife extends Observable {
 
         field = GolState.field(rows, columns);
         history = new LinkedList<>();
+    }
+
+    public static <T> Stream<T> deepStream(T[][] array) {
+        return Arrays.stream(array).flatMap(Arrays::stream);
     }
 
     /**
@@ -123,11 +128,11 @@ public class GameOfLife extends Observable {
     }
 
     public boolean allDead() {
-        return Arrays.stream(field).allMatch(row -> Arrays.stream(row).allMatch(c -> c == GolState.DEAD));
+        return deepStream(field).allMatch(c -> c == GolState.DEAD);
     }
 
     public long countAlive() {
-        return Arrays.stream(field).mapToLong(r -> Arrays.stream(r).filter(s -> s == GolState.ALIVE).count()).sum();
+        return deepStream(field).filter(s -> s == GolState.ALIVE).count();
     }
 
     /**
@@ -175,6 +180,17 @@ public class GameOfLife extends Observable {
     public void setKeepTrack(int keepTrack) {
         this.keepTrack = keepTrack;
     }
+
+    public int getRows() {
+        return field.length;
+    }
+
+    public int getColumns() {
+        if (field.length == 0)
+            return 0;
+        return field[0].length;
+    }
+
 
     /**
      * arguments for observer notification

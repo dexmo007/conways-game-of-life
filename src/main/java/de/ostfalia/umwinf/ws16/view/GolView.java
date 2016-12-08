@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 /**
+ * JavaFX main class
  * @author Henrik Drefs
  */
 public class GolView extends Application {

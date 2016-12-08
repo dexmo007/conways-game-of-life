@@ -15,11 +15,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.stream.Stream;
 
 /**
  * displays a {@link GameOfLife} in a {@link GridPane} wrapped by a {@link BorderPane} using colored cells
@@ -72,7 +70,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
 
         handlePattern("");
         // remove grid lines for simulation
-        deepStream(rectangles).forEach(r -> r.setStroke(Color.TRANSPARENT));
+        GameOfLife.deepStream(rectangles).forEach(r -> r.setStroke(Color.TRANSPARENT));
         running = true;
         Thread t = new Thread(new Task<Void>() {
             private boolean repeating = false;
@@ -100,7 +98,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
                     }
                     Thread.sleep(period);
                 }
-                deepStream(rectangles).forEach(r -> r.setStroke(Color.BLACK));
+                GameOfLife.deepStream(rectangles).forEach(r -> r.setStroke(Color.BLACK));
                 return null;
             }
 
@@ -138,7 +136,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
             throw new IllegalArgumentException("size invalid");
         this.columns = x;
         this.rows = y;
-        applyFieldSize();
+        applyField();
     }
 
     /**
@@ -150,13 +148,13 @@ public abstract class GolGrid extends BorderPane implements Observer {
         if (running)
             throw new IllegalStateException("simulation is running");
 
-        applyFieldSize();
+        applyField();
     }
 
     /**
      * creates a new {@link GridPane} and a new {@link GameOfLife} for the changed size
      */
-    private void applyFieldSize() {
+    public void applyField(final GameOfLife gol) {
         backingGrid = new GridPane();
         setCenter(backingGrid);
         backingGrid.layoutBoundsProperty().addListener(new ChangeListener<Bounds>() {
@@ -165,8 +163,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
                 if (newValue.getHeight() <= 0.0)
                     return;
 
-                // init game
-                gol = new GameOfLife(rows, columns);
+                GolGrid.this.gol = gol;
                 gol.addObserver(GolGrid.this);
                 List<List<GolState>> field = gol.getField();
                 rectangles = new Rectangle[rows][columns];
@@ -190,6 +187,10 @@ public abstract class GolGrid extends BorderPane implements Observer {
 
             }
         });
+    }
+
+    private void applyField() {
+        applyField(new GameOfLife(rows, columns));
     }
 
     /**
@@ -256,7 +257,4 @@ public abstract class GolGrid extends BorderPane implements Observer {
         }
     }
 
-    public static <T> Stream<T> deepStream(T[][] array) {
-        return Arrays.stream(array).flatMap(Arrays::stream);
-    }
 }

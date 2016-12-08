@@ -18,7 +18,7 @@ public enum GolState {
     /**
      * @param r number of rows
      * @param c number of columns
-     * @return a GOL field with all states set to {@code NONE}
+     * @return a GOL field with all states set to {@code DEAD}
      */
     public static GolState[][] field(int r, int c) {
         GolState[][] field = new GolState[r][c];

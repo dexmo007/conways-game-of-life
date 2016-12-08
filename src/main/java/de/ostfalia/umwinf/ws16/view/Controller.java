@@ -1,10 +1,16 @@
 package de.ostfalia.umwinf.ws16.view;
 
+import de.ostfalia.umwinf.ws16.conf.Config;
+import de.ostfalia.umwinf.ws16.logic.GameOfLife;
+import de.ostfalia.umwinf.ws16.logic.GolState;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
 
+import javax.xml.bind.JAXBException;
+import java.io.File;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -75,7 +81,7 @@ public class Controller implements Initializable {
             return;
         }
         if (timePeriod <= 0)
-            new Alert(Alert.AlertType.ERROR, "Enter a valid time period!", ButtonType.OK).show();
+            error("Enter a valid time period!");
         golGrid.startSimulation(timePeriod);
     }
 
@@ -102,7 +108,7 @@ public class Controller implements Initializable {
             int y = Integer.parseInt(yField.getText());
             golGrid.setFieldSize(x, y);
         } catch (IllegalArgumentException e) {
-            new Alert(Alert.AlertType.ERROR, "Enter valid field sizes!", ButtonType.OK).show();
+            error("Enter valid field sizes!");
         }
     }
 
@@ -112,4 +118,51 @@ public class Controller implements Initializable {
         statusLabel.setText("");
         patternLabel.setText("");
     }
+
+    private static final FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML-files (*.xml)",
+            "*.xml");
+
+    /**
+     * menu
+     */
+    @FXML
+    public void save() {
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(filter);
+        File file = fc.showSaveDialog(borderPane.getScene().getWindow());
+        if (file != null) {
+            try {
+                new Config(golGrid.getGameOfLife()).save(file);
+            } catch (JAXBException e) {
+                error("Couldn't save to that location.");
+            }
+        }
+    }
+
+    @FXML
+    public void load() {
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(filter);
+        File file = fc.showOpenDialog(borderPane.getScene().getWindow());
+        if (file != null) {
+            try {
+                Config config = Config.load(file);
+                xField.setText(config.getX() + "");
+                yField.setText(config.getY() + "");
+                GameOfLife gol = new GameOfLife(config.getY(), config.getX());
+                config.getAlive()
+                        .forEach(p -> gol.setCell(GolState.ALIVE, p.getX(), p.getY()));
+                golGrid.applyField(gol);
+            } catch (JAXBException e) {
+                error("Loading failed.");
+            } catch (IllegalArgumentException iae) {
+                error("File invalid.");
+            }
+        }
+    }
+
+    private static void error(String msg) {
+        new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK).show();
+    }
+
 }
