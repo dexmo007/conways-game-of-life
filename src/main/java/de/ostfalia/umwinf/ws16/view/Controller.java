@@ -136,6 +136,7 @@ public class Controller implements Initializable {
     public void save() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(filter);
+        fc.setInitialDirectory(new File(System.getProperty("user.dir")));
         File file = fc.showSaveDialog(borderPane.getScene().getWindow());
         if (file != null) {
             try {
@@ -150,6 +151,7 @@ public class Controller implements Initializable {
     public void load() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(filter);
+        fc.setInitialDirectory(new File(System.getProperty("user.dir")));
         File file = fc.showOpenDialog(borderPane.getScene().getWindow());
         if (file != null) {
             try {
