@@ -74,6 +74,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Edit">
             <items>
+                  <MenuItem mnemonicParsing="false" onAction="#reset" text="Reset" />
               <MenuItem mnemonicParsing="false" onAction="#clearField" text="Clear Field" />
             </items>
           </Menu>

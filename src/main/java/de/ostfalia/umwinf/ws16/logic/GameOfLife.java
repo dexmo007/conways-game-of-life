@@ -1,5 +1,7 @@
 package de.ostfalia.umwinf.ws16.logic;
 
+import javafx.util.Pair;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -9,7 +11,7 @@ import java.util.stream.Stream;
  *
  * @author Henrik Drefs
  */
-public class GameOfLife extends Observable {
+public class GameOfLife extends Observable implements Cloneable {
 
     private GolState[][] field;
     private long countAdvances = 0;
@@ -191,6 +193,14 @@ public class GameOfLife extends Observable {
         return field[0].length;
     }
 
+    public GameOfLife clone() {
+        try {
+            return (GameOfLife) super.clone();
+        } catch (CloneNotSupportedException e) {
+            // is supported
+            return null;
+        }
+    }
 
     /**
      * arguments for observer notification

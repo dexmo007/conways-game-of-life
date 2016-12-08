@@ -33,6 +33,10 @@ public abstract class GolGrid extends BorderPane implements Observer {
      * simulation running flag
      */
     private boolean running = false;
+    /**
+     * copies the GoL instance when simulation is started, so it can be resetted
+     */
+    private GameOfLife copy;
 
     private static final int STROKE_WIDTH = 2;
 
@@ -67,7 +71,7 @@ public abstract class GolGrid extends BorderPane implements Observer {
             throw new IllegalStateException("Simulation already running");
         if (period <= 0)
             throw new IllegalArgumentException("Invalid period");
-
+        copy = gol.clone();
         handlePattern("");
         // remove grid lines for simulation
         GameOfLife.deepStream(rectangles).forEach(r -> r.setStroke(Color.TRANSPARENT));
@@ -149,6 +153,13 @@ public abstract class GolGrid extends BorderPane implements Observer {
             throw new IllegalStateException("simulation is running");
 
         applyField();
+    }
+
+    public void reset() {
+        if (running)
+            stopSimulation();
+        if (copy != null)
+            applyField(copy);
     }
 
     /**

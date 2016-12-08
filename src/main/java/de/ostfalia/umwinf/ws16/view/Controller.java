@@ -119,6 +119,13 @@ public class Controller implements Initializable {
         patternLabel.setText("");
     }
 
+    @FXML
+    public void reset() {
+        golGrid.reset();
+        statusLabel.setText("");
+        patternLabel.setText("");
+    }
+
     private static final FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML-files (*.xml)",
             "*.xml");
 
