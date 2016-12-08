@@ -166,6 +166,8 @@ public abstract class GolGrid extends BorderPane implements Observer {
                 GolGrid.this.gol = gol;
                 gol.addObserver(GolGrid.this);
                 List<List<GolState>> field = gol.getField();
+                rows = gol.getRows();
+                columns = gol.getColumns();
                 rectangles = new Rectangle[rows][columns];
                 final ClickHandler clickHandler = new ClickHandler();
                 double rectSize = calcRectangleSize(newValue.getHeight(), newValue.getWidth());
