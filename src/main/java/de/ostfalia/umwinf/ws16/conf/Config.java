@@ -1,7 +1,6 @@
 package de.ostfalia.umwinf.ws16.conf;
 
 import de.ostfalia.umwinf.ws16.logic.GameOfLife;
-import de.ostfalia.umwinf.ws16.logic.GolState;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -39,12 +38,12 @@ public class Config {
     }
 
     public Config(GameOfLife gameOfLife) {
-        this(gameOfLife.getColumns(), gameOfLife.getRows());
-        List<List<GolState>> field = gameOfLife.getField();
-        for (int i = 0; i < field.size(); i++) {
-            List<GolState> row = field.get(i);
-            for (int j = 0; j < row.size(); j++)
-                if (row.get(j) == GolState.ALIVE)
+        this(gameOfLife.getColumnCount(), gameOfLife.getRowCount());
+        boolean[][] field = gameOfLife.getField();
+        for (int i = 0; i < field.length; i++) {
+            boolean[] row = field[i];
+            for (int j = 0; j < row.length; j++)
+                if (row[j])
                     addPoint(j, i);
         }
     }

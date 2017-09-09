@@ -2,7 +2,6 @@ package de.ostfalia.umwinf.ws16.view;
 
 import de.ostfalia.umwinf.ws16.conf.Config;
 import de.ostfalia.umwinf.ws16.logic.GameOfLife;
-import de.ostfalia.umwinf.ws16.logic.GolState;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -160,7 +159,7 @@ public class Controller implements Initializable {
                 yField.setText(config.getY() + "");
                 GameOfLife gol = new GameOfLife(config.getY(), config.getX());
                 config.getAlive()
-                        .forEach(p -> gol.setCell(GolState.ALIVE, p.getX(), p.getY()));
+                        .forEach(p -> gol.setCell(true, p.getX(), p.getY()));
                 golGrid.applyField(gol);
             } catch (JAXBException e) {
                 error("Loading failed.");

@@ -1,10 +1,9 @@
 package de.ostfalia.umwinf.ws16.logic;
 
-import javafx.util.Pair;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Observable;
+import java.util.Queue;
 
 /**
  * Conway's Game of Life implementation, offers analysis like pattern recognition
@@ -13,11 +12,11 @@ import java.util.stream.Stream;
  */
 public class GameOfLife extends Observable implements Cloneable {
 
-    private GolState[][] field;
+    private boolean[][] field;
     private long countAdvances = 0;
     private boolean fieldStatic = false;
     private int cyclicPeriod = -1;
-    private Queue<GolState[][]> history;
+    private Queue<boolean[][]> history;
     /**
      * keep track defines how many stages back the game is saved to be available for pattern recognition
      */
@@ -35,12 +34,8 @@ public class GameOfLife extends Observable implements Cloneable {
         if (rows <= 0 || columns <= 0)
             throw new IllegalArgumentException("size invalid");
 
-        field = GolState.field(rows, columns);
+        field = new boolean[rows][columns];
         history = new LinkedList<>();
-    }
-
-    public static <T> Stream<T> deepStream(T[][] array) {
-        return Arrays.stream(array).flatMap(Arrays::stream);
     }
 
     /**
@@ -50,7 +45,7 @@ public class GameOfLife extends Observable implements Cloneable {
      * @param x     x-coordinate of cell to change
      * @param y     y-coordinate of cell to change
      */
-    public void setCell(GolState state, int x, int y) {
+    public void setCell(boolean state, int x, int y) {
         field[y][x] = state;
         countAdvances = 0;
         fieldStatic = false;
@@ -60,19 +55,15 @@ public class GameOfLife extends Observable implements Cloneable {
         notifyObservers(new ObserverArgs(state, x, y));
     }
 
-    public GolState getCell(int x, int y) {
+    public boolean getCell(int x, int y) {
         return field[y][x];
     }
 
     /**
      * @return an unmodifiable view of the field
      */
-    public List<List<GolState>> getField() {
-        List<List<GolState>> tmp = Arrays.stream(field)
-                .map(row -> Collections.unmodifiableList(
-                        Arrays.asList(row)))
-                .collect(Collectors.toList());
-        return Collections.unmodifiableList(tmp);
+    public boolean[][] getField() {
+        return Arrays.copyOf(field, field.length);
     }
 
     public boolean isFieldStatic() {
@@ -99,11 +90,11 @@ public class GameOfLife extends Observable implements Cloneable {
             return;
 
         countAdvances++;
-        GolState[][] nextField = GolState.field(field.length, field[0].length);
+        boolean[][] nextField = new boolean[getRowCount()][getColumnCount()];
         for (int y = 0; y < field.length; y++) {
-            GolState[] row = field[y];
+            boolean[] row = field[y];
             for (int x = 0; x < row.length; x++) {
-                GolState nextState = getNextState(x, y);
+                boolean nextState = getNextState(x, y);
                 nextField[y][x] = nextState;
                 setChanged();
                 notifyObservers(new ObserverArgs(nextState, x, y));
@@ -114,7 +105,7 @@ public class GameOfLife extends Observable implements Cloneable {
         } else if (cyclicPeriod == -1) {
             // check for repetitive pattern
             int i = history.size();
-            for (GolState[][] old : history) {
+            for (boolean[][] old : history) {
                 if (Arrays.deepEquals(old, nextField)) {
                     cyclicPeriod = i;
                     break;
@@ -130,11 +121,20 @@ public class GameOfLife extends Observable implements Cloneable {
     }
 
     public boolean allDead() {
-        return deepStream(field).allMatch(c -> c == GolState.DEAD);
+        for (boolean[] row : field)
+            for (boolean isAlive : row)
+                if (isAlive)
+                    return false;
+        return true;
     }
 
     public long countAlive() {
-        return deepStream(field).filter(s -> s == GolState.ALIVE).count();
+        long count = 0;
+        for (boolean[] row : field)
+            for (boolean isAlive : row)
+                if (isAlive)
+                    count++;
+        return count;
     }
 
     /**
@@ -142,37 +142,21 @@ public class GameOfLife extends Observable implements Cloneable {
      * @param y y-coordinate of cell to inspect
      * @return the state of the given cell in the next generation
      */
-    private GolState getNextState(int x, int y) {
+    private boolean getNextState(int x, int y) {
         // get number of alive neighbors
         int aliveNeighbors = 0;
-        for (int row = y - 1; row <= y + 1; row++)
+        for (int row = y - 1; row <= y + 1; row++) {
             for (int col = x - 1; col <= x + 1; col++) {
                 // if this cell or out of bounds
-                if ((row == y && col == x) || row < 0 || col < 0 || row >= field.length || col >= field[0].length)
+                if ((row == y && col == x) || row < 0 || col < 0 || row >= field.length || col >= field[0].length) {
                     continue;
-                if (field[row][col] == GolState.ALIVE)
+                }
+                if (field[row][col]) {
                     aliveNeighbors++;
+                }
             }
-
-        switch (getCell(x, y)) {
-            case DEAD:
-                if (aliveNeighbors == 3) {
-                    return GolState.ALIVE;
-                }
-                return GolState.DEAD;
-            case ALIVE:
-                switch (aliveNeighbors) {
-                    case 0:
-                    case 1:
-                        return GolState.DEAD;
-                    case 2:
-                    case 3:
-                        return GolState.ALIVE;
-                    default:
-                        return GolState.DEAD;
-                }
         }
-        return GolState.DEAD;
+        return aliveNeighbors == 3 || field[y][x] && aliveNeighbors == 2;
     }
 
     public int getKeepTrack() {
@@ -183,11 +167,11 @@ public class GameOfLife extends Observable implements Cloneable {
         this.keepTrack = keepTrack;
     }
 
-    public int getRows() {
+    public int getRowCount() {
         return field.length;
     }
 
-    public int getColumns() {
+    public int getColumnCount() {
         if (field.length == 0)
             return 0;
         return field[0].length;
@@ -206,17 +190,17 @@ public class GameOfLife extends Observable implements Cloneable {
      * arguments for observer notification
      */
     public static class ObserverArgs {
-        private GolState state;
+        private boolean state;
         private int x;
         private int y;
 
-        ObserverArgs(GolState state, int x, int y) {
+        ObserverArgs(boolean state, int x, int y) {
             this.state = state;
             this.x = x;
             this.y = y;
         }
 
-        public GolState getState() {
+        public boolean getState() {
             return state;
         }
 

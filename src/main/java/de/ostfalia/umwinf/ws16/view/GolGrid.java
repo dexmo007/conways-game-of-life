@@ -1,7 +1,6 @@
 package de.ostfalia.umwinf.ws16.view;
 
 import de.ostfalia.umwinf.ws16.logic.GameOfLife;
-import de.ostfalia.umwinf.ws16.logic.GolState;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -15,7 +14,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -74,7 +72,9 @@ public abstract class GolGrid extends BorderPane implements Observer {
         copy = gol.clone();
         handlePattern("");
         // remove grid lines for simulation
-        GameOfLife.deepStream(rectangles).forEach(r -> r.setStroke(Color.TRANSPARENT));
+        for (Rectangle[] row : rectangles)
+            for (Rectangle rectangle : row)
+                rectangle.setStroke(deadColor());
         running = true;
         Thread t = new Thread(new Task<Void>() {
             private boolean repeating = false;
@@ -102,7 +102,9 @@ public abstract class GolGrid extends BorderPane implements Observer {
                     }
                     Thread.sleep(period);
                 }
-                GameOfLife.deepStream(rectangles).forEach(r -> r.setStroke(Color.BLACK));
+                for (Rectangle[] row : rectangles)
+                    for (Rectangle rectangle : row)
+                        rectangle.setStroke(aliveColor());
                 return null;
             }
 
@@ -176,18 +178,18 @@ public abstract class GolGrid extends BorderPane implements Observer {
 
                 GolGrid.this.gol = gol;
                 gol.addObserver(GolGrid.this);
-                List<List<GolState>> field = gol.getField();
-                rows = gol.getRows();
-                columns = gol.getColumns();
+                boolean[][] field = gol.getField();
+                rows = gol.getRowCount();
+                columns = gol.getColumnCount();
                 rectangles = new Rectangle[rows][columns];
                 final ClickHandler clickHandler = new ClickHandler();
                 double rectSize = calcRectangleSize(newValue.getHeight(), newValue.getWidth());
-                for (int i = 0; i < field.size(); i++) {
-                    List<GolState> row = field.get(i);
+                for (int i = 0; i < field.length; i++) {
+                    boolean[] row = field[i];
                     Rectangle[] rectRow = new Rectangle[columns];
-                    for (int j = 0; j < row.size(); j++) {
-                        Rectangle r = new Rectangle(rectSize, rectSize, colorOf(field.get(i).get(j)));
-                        r.setStroke(Color.BLACK);
+                    for (int j = 0; j < row.length; j++) {
+                        Rectangle r = new Rectangle(rectSize, rectSize, colorOf(field[i][j]));
+                        r.setStroke(aliveColor());
                         // save coordinates in node's id
                         r.setId(i + ":" + j);
                         r.addEventHandler(MouseEvent.MOUSE_CLICKED, clickHandler);
@@ -242,11 +244,17 @@ public abstract class GolGrid extends BorderPane implements Observer {
     }
 
     /**
-     * converts {@link GolState} to a display {@link Color}, may be overwritten for customization
+     * converts state to a display {@link Color}, may be overwritten for customization
      */
-    protected Color colorOf(GolState state) {
-        if (state == GolState.ALIVE)
-            return Color.BLACK;
+    final public Color colorOf(boolean state) {
+        return state ? aliveColor() : deadColor();
+    }
+
+    protected Color aliveColor() {
+        return Color.BLACK;
+    }
+
+    protected Color deadColor() {
         return Color.TRANSPARENT;
     }
 
@@ -265,8 +273,8 @@ public abstract class GolGrid extends BorderPane implements Observer {
             String[] splitId = rect.getId().split(":");
             int i = Integer.parseInt((splitId[0]));
             int j = Integer.parseInt(splitId[1]);
-            GolState current = gol.getCell(j, i);
-            gol.setCell(current.toggle(), j, i);
+            boolean current = gol.getCell(j, i);
+            gol.setCell(!current, j, i);
         }
     }
 

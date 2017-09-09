@@ -24,7 +24,9 @@ public class GolView extends Application {
     public void start(Stage stage) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/main.fxml"));
         stage.setTitle("Conway's Game Of Life");
-        stage.setScene(new Scene(root, WINDOW_SIZE, WINDOW_SIZE));
+        Scene scene = new Scene(root, WINDOW_SIZE, WINDOW_SIZE);
+        scene.getStylesheets().add("/bootstrap3.css");
+        stage.setScene(scene);
         stage.show();
     }
 }
